@@ -1,0 +1,4 @@
+.idea
+.zeabur
+node_modules
+.env*
