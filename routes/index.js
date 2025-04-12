@@ -11,10 +11,7 @@ app.use(express.json());
 const API_KEY = process.env.API_KEY;
 const CLIENT_ID = process.env.CLIENT_ID;
 // Base API URL
-const DEV_MODE = process.env.DEV_MODE === 'true';
-const BASE_API_URL = DEV_MODE
-  ? "https://wallet-dev.kryptogo.app/v1/studio/api"
-  : "https://wallet.kryptogo.app/v1/studio/api";
+const BASE_API_URL = "https://wallet.kryptogo.app/v1/studio/api";
 
 // Common function to set request headers
 const getRequestHeaders = (req) => {
@@ -147,6 +144,42 @@ app.post("/api/asset_pro/transfer", async (req, res) => {
       details: error.response?.data || error.message,
     });
   }
+});
+
+// Webhook endpoint to receive payment status updates
+app.post("/webhook", (req, res) => {
+  const paymentUpdate = req.body;
+  
+  // Verify the payment data (recommended)
+  // Process the payment update based on status
+  switch(paymentUpdate.status) {
+    case 'success':
+      // Payment completed successfully
+      console.log('Payment successful!', {
+        txHash: paymentUpdate.payment_tx_hash,
+        receivedAmount: paymentUpdate.received_amount,
+        aggregatedAmount: paymentUpdate.aggregated_amount
+      });
+      break;
+    case 'expired':
+      // Payment window closed without receiving funds
+      console.log('Payment expired', paymentUpdate);
+      break;
+    case 'insufficient_not_refunded':
+      // User sent too little - waiting for refund
+      console.log('Insufficient payment, pending refund', paymentUpdate);
+      break;
+    case 'insufficient_refunded':
+      // Refund completed
+      console.log('Insufficient payment refunded', {
+        refundTxHash: paymentUpdate.refund_tx_hash,
+        refundAmount: paymentUpdate.refund_amount
+      });
+      break;
+  }
+  
+  // Respond to acknowledge receipt
+  res.status(200).send('Webhook received');
 });
 
 const startServer = () => {
