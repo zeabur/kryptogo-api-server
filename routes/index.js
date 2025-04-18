@@ -153,6 +153,9 @@ app.post("/webhook", (req, res) => {
   // Verify the payment data (recommended)
   // Process the payment update based on status
   switch(paymentUpdate.status) {
+    case 'pending':
+      console.log('Payment pending', paymentUpdate);
+      break;
     case 'success':
       // Payment completed successfully
       console.log('Payment successful!', {
